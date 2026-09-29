@@ -1,0 +1,650 @@
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+let currentCleanup = () => {};
+let soundOn = true;
+
+const titles = {
+  snake: "🐍 Cobrinha",
+  memory: "🃏 Memória",
+  tictactoe: "❌⭕ Jogo da Velha",
+  pong: "🏓 Pong",
+  breakout: "🧱 Breakout",
+  quiz: "🧠 Quiz"
+};
+
+$$(".game-card").forEach(button => {
+  button.onclick = () => openGame(button.dataset.game);
+});
+
+$("#backBtn").onclick = () => {
+  currentCleanup();
+  $("#gameScreen").classList.remove("active");
+  $("#home").classList.add("active");
+};
+
+$("#soundBtn").onclick = () => {
+  soundOn = !soundOn;
+  $("#soundBtn").textContent = soundOn ? "🔊" : "🔇";
+};
+
+function openGame(name) {
+  currentCleanup();
+
+  $("#home").classList.remove("active");
+  $("#gameScreen").classList.add("active");
+
+  $("#gameTitle").textContent = titles[name];
+  $("#score").textContent = "Pontos: 0";
+
+  const games = {
+    snake,
+    memory,
+    tictactoe,
+    pong,
+    breakout,
+    quiz
+  };
+
+  games[name]();
+}
+
+function setScore(value) {
+  $("#score").textContent = "Pontos: " + value;
+}
+
+function beep(frequency = 440) {
+  if (!soundOn) return;
+
+  try {
+    const audio = new AudioContext();
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+
+    oscillator.frequency.value = frequency;
+    gain.gain.value = 0.04;
+
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.06);
+  } catch (e) {}
+}
+
+
+// ====================
+// 🐍 COBRINHA
+// ====================
+
+function snake() {
+  const area = $("#gameArea");
+
+  area.innerHTML = `
+    <div class="game-box">
+      <p>Use as setas do teclado ou deslize no celular.</p>
+
+      <div class="canvas-wrap">
+        <canvas class="game-canvas"
+          width="400"
+          height="400">
+        </canvas>
+      </div>
+
+      <p id="snakeInfo">
+        Clique no jogo para começar.
+      </p>
+    </div>
+  `;
+
+  const canvas = area.querySelector("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const cell = 20;
+
+  let body = [
+    { x: 10, y: 10 }
+  ];
+
+  let direction = {
+    x: 1,
+    y: 0
+  };
+
+  let food = {
+    x: 15,
+    y: 10
+  };
+
+  let score = 0;
+  let running = true;
+
+  function newFood() {
+    food = {
+      x: Math.floor(Math.random() * 20),
+      y: Math.floor(Math.random() * 20)
+    };
+  }
+
+  function draw() {
+    ctx.fillStyle = "#050711";
+    ctx.fillRect(0, 0, 400, 400);
+
+    ctx.fillStyle = "#8b5cf6";
+
+    body.forEach(part => {
+      ctx.fillRect(
+        part.x * cell,
+        part.y * cell,
+        18,
+        18
+      );
+    });
+
+    ctx.fillStyle = "#22c55e";
+
+    ctx.fillRect(
+      food.x * cell,
+      food.y * cell,
+      18,
+      18
+    );
+  }
+
+  function tick() {
+    if (!running) return;
+
+    const head = {
+      x: body[0].x + direction.x,
+      y: body[0].y + direction.y
+    };
+
+    if (
+      head.x < 0 ||
+      head.y < 0 ||
+      head.x >= 20 ||
+      head.y >= 20 ||
+      body.some(
+        part =>
+          part.x === head.x &&
+          part.y === head.y
+      )
+    ) {
+      running = false;
+
+      $("#snakeInfo").textContent =
+        "Fim de jogo!";
+
+      return;
+    }
+
+    body.unshift(head);
+
+    if (
+      head.x === food.x &&
+      head.y === food.y
+    ) {
+      score += 10;
+
+      setScore(score);
+      beep(700);
+
+      newFood();
+    } else {
+      body.pop();
+    }
+
+    draw();
+  }
+
+  const keyHandler = event => {
+    const directions = {
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0]
+    };
+
+    if (!directions[event.key]) return;
+
+    const d = directions[event.key];
+
+    if (
+      d[0] !== -direction.x ||
+      d[1] !== -direction.y
+    ) {
+      direction = {
+        x: d[0],
+        y: d[1]
+      };
+    }
+  };
+
+  document.addEventListener(
+    "keydown",
+    keyHandler
+  );
+
+  const timer = setInterval(tick, 110);
+
+  draw();
+
+  currentCleanup = () => {
+    clearInterval(timer);
+    document.removeEventListener(
+      "keydown",
+      keyHandler
+    );
+  };
+}
+
+
+// ====================
+// 🃏 MEMÓRIA
+// ====================
+
+function memory() {
+  const area = $("#gameArea");
+
+  const icons = [
+    "🍎",
+    "🚀",
+    "🐱",
+    "⚽",
+    "🌟",
+    "🍕",
+    "🎲",
+    "🦄"
+  ];
+
+  const cards = [
+    ...icons,
+    ...icons
+  ].sort(() => Math.random() - 0.5);
+
+  let first = null;
+  let busy = false;
+  let matched = 0;
+  let moves = 0;
+
+  area.innerHTML = `
+    <div class="game-box">
+      <p>Encontre todos os pares.</p>
+
+      <div class="memory-grid">
+        ${cards.map((value, index) => `
+          <button
+            class="memory-card"
+            data-i="${index}">
+            ${value}
+          </button>
+        `).join("")}
+      </div>
+
+      <p id="memInfo">
+        Jogadas: 0
+      </p>
+    </div>
+  `;
+
+  const elements =
+    $$(".memory-card");
+
+  elements.forEach(card => {
+    card.onclick = () => {
+
+      if (
+        busy ||
+        card.classList.contains("matched") ||
+        card === first
+      ) return;
+
+      card.classList.add("open");
+
+      if (!first) {
+        first = card;
+        return;
+      }
+
+      moves++;
+
+      $("#memInfo").textContent =
+        "Jogadas: " + moves;
+
+      const second = card;
+
+      if (
+        first.textContent ===
+        second.textContent
+      ) {
+        first.classList.add("matched");
+        second.classList.add("matched");
+
+        matched++;
+
+        setScore(matched * 10);
+
+        beep(700);
+
+        first = null;
+
+        if (matched === icons.length) {
+          $("#memInfo").textContent =
+            "Você venceu! 🎉";
+        }
+
+      } else {
+        busy = true;
+
+        setTimeout(() => {
+          first.classList.remove("open");
+          second.classList.remove("open");
+
+          first = null;
+          busy = false;
+        }, 650);
+      }
+    };
+  });
+
+  currentCleanup = () => {};
+}
+
+
+// ====================
+// ❌⭕ JOGO DA VELHA
+// ====================
+
+function tictactoe() {
+  const area = $("#gameArea");
+
+  let board = Array(9).fill("");
+  let gameOver = false;
+
+  area.innerHTML = `
+    <div class="game-box">
+
+      <p>
+        Você é ❌.
+        O computador é ⭕.
+      </p>
+
+      <div class="ttt">
+        ${board.map((_, i) => `
+          <button data-i="${i}">
+          </button>
+        `).join("")}
+      </div>
+
+      <p id="tttInfo">
+        Sua vez!
+      </p>
+
+    </div>
+  `;
+
+  const cells = $$(".ttt button");
+
+  const wins = [
+    [0,1,2],
+    [3,4,5],
+    [6,7,8],
+    [0,3,6],
+    [1,4,7],
+    [2,5,8],
+    [0,4,8],
+    [2,4,6]
+  ];
+
+  function winner() {
+
+    for (const [a,b,c] of wins) {
+
+      if (
+        board[a] &&
+        board[a] === board[b] &&
+        board[a] === board[c]
+      ) {
+        return board[a];
+      }
+    }
+
+    return board.every(Boolean)
+      ? "draw"
+      : null;
+  }
+
+  function endGame() {
+
+    const result = winner();
+
+    if (!result) return false;
+
+    gameOver = true;
+
+    if (result === "draw") {
+      $("#tttInfo").textContent =
+        "Empate!";
+    }
+
+    else if (result === "❌") {
+      $("#tttInfo").textContent =
+        "Você venceu! 🎉";
+
+      setScore(100);
+    }
+
+    else {
+      $("#tttInfo").textContent =
+        "O computador venceu.";
+    }
+
+    return true;
+  }
+
+  cells.forEach(cell => {
+
+    cell.onclick = () => {
+
+      const index =
+        Number(cell.dataset.i);
+
+      if (
+        gameOver ||
+        board[index]
+      ) return;
+
+      board[index] = "❌";
+      cell.textContent = "❌";
+
+      if (endGame()) return;
+
+      const empty = board
+        .map((value, index) =>
+          value ? null : index
+        )
+        .filter(index =>
+          index !== null
+        );
+
+      const computer =
+        empty[
+          Math.floor(
+            Math.random() * empty.length
+          )
+        ];
+
+      board[computer] = "⭕";
+      cells[computer].textContent = "⭕";
+
+      endGame();
+    };
+  });
+
+  currentCleanup = () => {};
+}
+
+
+// ====================
+// 🧠 QUIZ
+// ====================
+
+function quiz() {
+
+  const questions = [
+
+    [
+      "Qual é o maior planeta do Sistema Solar?",
+      [
+        "Terra",
+        "Júpiter",
+        "Marte",
+        "Vênus"
+      ],
+      1
+    ],
+
+    [
+      "Quanto é 8 × 7?",
+      [
+        "54",
+        "56",
+        "64",
+        "48"
+      ],
+      1
+    ],
+
+    [
+      "Qual animal é conhecido como rei da selva?",
+      [
+        "Leão",
+        "Tigre",
+        "Elefante",
+        "Lobo"
+      ],
+      0
+    ],
+
+    [
+      "Quantos lados tem um hexágono?",
+      [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      1
+    ],
+
+    [
+      "Qual é a capital do Brasil?",
+      [
+        "São Paulo",
+        "Rio de Janeiro",
+        "Brasília",
+        "Salvador"
+      ],
+      2
+    ]
+
+  ];
+
+  let current = 0;
+  let score = 0;
+
+  const area = $("#gameArea");
+
+  function render() {
+
+    const question =
+      questions[current];
+
+    area.innerHTML = `
+      <div class="game-box">
+
+        <p>
+          ${current + 1}/${questions.length}
+        </p>
+
+        <div class="quiz-q">
+          ${question[0]}
+        </div>
+
+        <div class="quiz-options">
+
+          ${question[1].map(
+            (option, index) => `
+              <button data-j="${index}">
+                ${option}
+              </button>
+            `
+          ).join("")}
+
+        </div>
+
+      </div>
+    `;
+
+    area
+      .querySelectorAll(".quiz-options button")
+      .forEach(button => {
+
+        button.onclick = () => {
+
+          const answer =
+            Number(button.dataset.j);
+
+          if (answer === question[2]) {
+
+            score += 20;
+
+            setScore(score);
+
+            beep(700);
+
+          } else {
+
+            beep(200);
+
+          }
+
+          current++;
+
+          if (
+            current <
+            questions.length
+          ) {
+            render();
+          } else {
+
+            area.innerHTML = `
+              <div class="game-box">
+
+                <h2>
+                  Fim do quiz! 🏆
+                </h2>
+
+                <p>
+                  Você fez
+                  <b>${score}</b>
+                  pontos.
+                </p>
+
+                <button
+                  class="primary"
+                  onclick="quiz()">
+                  Jogar novamente
+                </button>
+
+              </div>
+            `;
+          }
+        };
+      });
+  }
+
+  render();
+
+  currentCleanup = () => {};
+}
