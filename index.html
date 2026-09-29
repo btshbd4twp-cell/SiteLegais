@@ -1,650 +1,513 @@
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-
-let currentCleanup = () => {};
-let soundOn = true;
-
-const titles = {
-  snake: "🐍 Cobrinha",
-  memory: "🃏 Memória",
-  tictactoe: "❌⭕ Jogo da Velha",
-  pong: "🏓 Pong",
-  breakout: "🧱 Breakout",
-  quiz: "🧠 Quiz"
-};
-
-$$(".game-card").forEach(button => {
-  button.onclick = () => openGame(button.dataset.game);
-});
-
-$("#backBtn").onclick = () => {
-  currentCleanup();
-  $("#gameScreen").classList.remove("active");
-  $("#home").classList.add("active");
-};
-
-$("#soundBtn").onclick = () => {
-  soundOn = !soundOn;
-  $("#soundBtn").textContent = soundOn ? "🔊" : "🔇";
-};
-
-function openGame(name) {
-  currentCleanup();
-
-  $("#home").classList.remove("active");
-  $("#gameScreen").classList.add("active");
-
-  $("#gameTitle").textContent = titles[name];
-  $("#score").textContent = "Pontos: 0";
-
-  const games = {
-    snake,
-    memory,
-    tictactoe,
-    pong,
-    breakout,
-    quiz
-  };
-
-  games[name]();
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#071a12">
+<title>Futebol Agora</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-
-function setScore(value) {
-  $("#score").textContent = "Pontos: " + value;
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f3f5f7;
+  color: #17221d;
 }
-
-function beep(frequency = 440) {
-  if (!soundOn) return;
-
-  try {
-    const audio = new AudioContext();
-    const oscillator = audio.createOscillator();
-    const gain = audio.createGain();
-
-    oscillator.frequency.value = frequency;
-    gain.gain.value = 0.04;
-
-    oscillator.connect(gain);
-    gain.connect(audio.destination);
-
-    oscillator.start();
-    oscillator.stop(audio.currentTime + 0.06);
-  } catch (e) {}
+header {
+  background: linear-gradient(135deg, #062e1b, #08783d);
+  color: white;
+  padding: 18px 5%;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 3px 15px #0003;
 }
-
-
-// ====================
-// 🐍 COBRINHA
-// ====================
-
-function snake() {
-  const area = $("#gameArea");
-
-  area.innerHTML = `
-    <div class="game-box">
-      <p>Use as setas do teclado ou deslize no celular.</p>
-
-      <div class="canvas-wrap">
-        <canvas class="game-canvas"
-          width="400"
-          height="400">
-        </canvas>
+.topo {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+.logo {
+  font-size: 25px;
+  font-weight: bold;
+}
+.logo span {
+  color: #72f19b;
+}
+nav {
+  display: flex;
+  gap: 18px;
+}
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+nav a:hover {
+  color: #72f19b;
+}
+.menu {
+  display: none;
+  font-size: 25px;
+  cursor: pointer;
+}
+.hero {
+  background:
+    linear-gradient(#0008, #0008),
+    url("https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1600&q=80")
+    center/cover;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  padding: 40px 5%;
+  color: white;
+}
+.hero-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
+}
+.hero h1 {
+  font-size: clamp(35px, 7vw, 65px);
+  max-width: 700px;
+  margin-bottom: 15px;
+}
+.hero p {
+  font-size: 18px;
+  max-width: 600px;
+  line-height: 1.6;
+}
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 35px 5%;
+}
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.section-title h2 {
+  font-size: 27px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px #00000012;
+  transition: .2s;
+}
+.card:hover {
+  transform: translateY(-4px);
+}
+.card img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+.card-content {
+  padding: 18px;
+}
+.tag {
+  display: inline-block;
+  background: #dff8e8;
+  color: #08783d;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 9px;
+}
+.card h3 {
+  font-size: 19px;
+  line-height: 1.3;
+  margin-bottom: 9px;
+}
+.card p {
+  color: #69746e;
+  line-height: 1.5;
+}
+.jogos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+.jogo {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 15px #00000012;
+}
+.campeonato {
+  color: #777;
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+.times {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-weight: bold;
+}
+.time {
+  width: 90px;
+}
+.escudo {
+  width: 55px;
+  height: 55px;
+  margin: auto auto 8px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #08783d;
+  color: white;
+  font-size: 22px;
+}
+.vs {
+  color: #888;
+  font-weight: bold;
+}
+.tabela {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px #00000012;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  background: #073b23;
+  color: white;
+  padding: 13px;
+  text-align: left;
+}
+td {
+  padding: 13px;
+  border-bottom: 1px solid #eee;
+}
+td:first-child {
+  font-weight: bold;
+}
+.busca {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+.busca input {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+}
+.busca button,
+.botao {
+  background: #08783d;
+  color: white;
+  border: none;
+  padding: 13px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.busca button:hover,
+.botao:hover {
+  background: #055a2d;
+}
+footer {
+  background: #061a10;
+  color: white;
+  margin-top: 40px;
+  padding: 40px 5%;
+}
+.footer-content {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+footer p {
+  color: #aab5af;
+  margin-top: 10px;
+}
+.escondido {
+  display: none;
+}
+@media (max-width: 800px) {
+  nav {
+    display: none;
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background: #062e1b;
+    flex-direction: column;
+    padding: 20px;
+  }
+  nav.ativo {
+    display: flex;
+  }
+  .menu {
+    display: block;
+  }
+  .grid,
+  .jogos {
+    grid-template-columns: 1fr;
+  }
+  .hero {
+    min-height: 330px;
+  }
+  .footer-content {
+    flex-direction: column;
+  }
+  table {
+    font-size: 14px;
+  }
+  th,
+  td {
+    padding: 10px 7px;
+  }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="topo">
+    <div class="logo">⚽ Futebol<span>Agora</span></div>
+    <div class="menu" onclick="abrirMenu()">☰</div>
+    <nav id="nav">
+      <a onclick="irPara('inicio')">Início</a>
+      <a onclick="irPara('noticias')">Notícias</a>
+      <a onclick="irPara('jogos')">Jogos</a>
+      <a onclick="irPara('tabela')">Tabela</a>
+    </nav>
+  </div>
+</header>
+<section class="hero" id="inicio">
+  <div class="hero-content">
+    <h1>O mundo do futebol em um só lugar.</h1>
+    <p>
+      Notícias, jogos, campeonatos, resultados e classificação.
+      Acompanhe tudo sobre futebol.
+    </p>
+  </div>
+</section>
+<main>
+<section class="container" id="noticias">
+  <div class="section-title">
+    <h2>📰 Últimas notícias</h2>
+  </div>
+  <div class="busca">
+    <input
+      id="pesquisa"
+      type="text"
+      placeholder="Pesquisar notícia..."
+      onkeyup="pesquisar()"
+    >
+    <button onclick="pesquisar()">Buscar</button>
+  </div>
+  <div class="grid" id="noticiasGrid">
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1553778263-73a83bab9b0c?auto=format&fit=crop&w=900&q=80">
+      <div class="card-content">
+        <span class="tag">Futebol</span>
+        <h3>Mercado da bola movimenta os grandes clubes</h3>
+        <p>Clubes seguem trabalhando para reforçar seus elencos.</p>
       </div>
-
-      <p id="snakeInfo">
-        Clique no jogo para começar.
-      </p>
+    </article>
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=900&q=80">
+      <div class="card-content">
+        <span class="tag">Campeonatos</span>
+        <h3>Rodada promete grandes confrontos</h3>
+        <p>Confira os principais jogos e tudo que está em disputa.</p>
+      </div>
+    </article>
+    <article class="card">
+      <img src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=900&q=80">
+      <div class="card-content">
+        <span class="tag">Seleções</span>
+        <h3>Seleções se preparam para novos desafios</h3>
+        <p>Veja as principais informações das equipes.</p>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="container" id="jogos">
+  <div class="section-title">
+    <h2>⚽ Próximos jogos</h2>
+  </div>
+  <div class="jogos">
+    <div class="jogo">
+      <div class="campeonato">CAMPEONATO BRASILEIRO</div>
+      <div class="times">
+        <div class="time">
+          <div class="escudo">🔴</div>
+          Internacional
+        </div>
+        <div class="vs">VS</div>
+        <div class="time">
+          <div class="escudo">⚫</div>
+          Grêmio
+        </div>
+      </div>
     </div>
-  `;
-
-  const canvas = area.querySelector("canvas");
-  const ctx = canvas.getContext("2d");
-
-  const cell = 20;
-
-  let body = [
-    { x: 10, y: 10 }
-  ];
-
-  let direction = {
-    x: 1,
-    y: 0
-  };
-
-  let food = {
-    x: 15,
-    y: 10
-  };
-
-  let score = 0;
-  let running = true;
-
-  function newFood() {
-    food = {
-      x: Math.floor(Math.random() * 20),
-      y: Math.floor(Math.random() * 20)
-    };
-  }
-
-  function draw() {
-    ctx.fillStyle = "#050711";
-    ctx.fillRect(0, 0, 400, 400);
-
-    ctx.fillStyle = "#8b5cf6";
-
-    body.forEach(part => {
-      ctx.fillRect(
-        part.x * cell,
-        part.y * cell,
-        18,
-        18
-      );
-    });
-
-    ctx.fillStyle = "#22c55e";
-
-    ctx.fillRect(
-      food.x * cell,
-      food.y * cell,
-      18,
-      18
-    );
-  }
-
-  function tick() {
-    if (!running) return;
-
-    const head = {
-      x: body[0].x + direction.x,
-      y: body[0].y + direction.y
-    };
-
-    if (
-      head.x < 0 ||
-      head.y < 0 ||
-      head.x >= 20 ||
-      head.y >= 20 ||
-      body.some(
-        part =>
-          part.x === head.x &&
-          part.y === head.y
-      )
-    ) {
-      running = false;
-
-      $("#snakeInfo").textContent =
-        "Fim de jogo!";
-
-      return;
-    }
-
-    body.unshift(head);
-
-    if (
-      head.x === food.x &&
-      head.y === food.y
-    ) {
-      score += 10;
-
-      setScore(score);
-      beep(700);
-
-      newFood();
+    <div class="jogo">
+      <div class="campeonato">CAMPEONATO BRASILEIRO</div>
+      <div class="times">
+        <div class="time">
+          <div class="escudo">🟢</div>
+          Palmeiras
+        </div>
+        <div class="vs">VS</div>
+        <div class="time">
+          <div class="escudo">🔴</div>
+          Flamengo
+        </div>
+      </div>
+    </div>
+    <div class="jogo">
+      <div class="campeonato">CAMPEONATO BRASILEIRO</div>
+      <div class="times">
+        <div class="time">
+          <div class="escudo">⚪</div>
+          Santos
+        </div>
+        <div class="vs">VS</div>
+        <div class="time">
+          <div class="escudo">🔵</div>
+          Cruzeiro
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="container" id="tabela">
+  <div class="section-title">
+    <h2>🏆 Classificação</h2>
+  </div>
+  <div class="tabela">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Time</th>
+          <th>J</th>
+          <th>V</th>
+          <th>E</th>
+          <th>D</th>
+          <th>PTS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Flamengo</td>
+          <td>10</td>
+          <td>7</td>
+          <td>2</td>
+          <td>1</td>
+          <td>23</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Palmeiras</td>
+          <td>10</td>
+          <td>6</td>
+          <td>3</td>
+          <td>1</td>
+          <td>21</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Internacional</td>
+          <td>10</td>
+          <td>6</td>
+          <td>2</td>
+          <td>2</td>
+          <td>20</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Grêmio</td>
+          <td>10</td>
+          <td>5</td>
+          <td>3</td>
+          <td>2</td>
+          <td>18</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>Cruzeiro</td>
+          <td>10</td>
+          <td>5</td>
+          <td>2</td>
+          <td>3</td>
+          <td>17</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</main>
+<footer>
+  <div class="footer-content">
+    <div>
+      <h2>⚽ FutebolAgora</h2>
+      <p>Seu portal de futebol.</p>
+    </div>
+    <div>
+      <h3>Informações</h3>
+      <p>Notícias • Jogos • Tabelas • Campeonatos</p>
+    </div>
+  </div>
+</footer>
+<script>
+function abrirMenu() {
+  document.getElementById("nav").classList.toggle("ativo");
+}
+function irPara(id) {
+  document.getElementById(id).scrollIntoView({
+    behavior: "smooth"
+  });
+  document.getElementById("nav").classList.remove("ativo");
+}
+function pesquisar() {
+  const texto =
+    document.getElementById("pesquisa")
+    .value
+    .toLowerCase();
+  const noticias =
+    document.querySelectorAll("#noticiasGrid .card");
+  noticias.forEach(noticia => {
+    const conteudo =
+      noticia.innerText.toLowerCase();
+    if (conteudo.includes(texto)) {
+      noticia.style.display = "";
     } else {
-      body.pop();
+      noticia.style.display = "none";
     }
-
-    draw();
-  }
-
-  const keyHandler = event => {
-    const directions = {
-      ArrowUp: [0, -1],
-      ArrowDown: [0, 1],
-      ArrowLeft: [-1, 0],
-      ArrowRight: [1, 0]
-    };
-
-    if (!directions[event.key]) return;
-
-    const d = directions[event.key];
-
-    if (
-      d[0] !== -direction.x ||
-      d[1] !== -direction.y
-    ) {
-      direction = {
-        x: d[0],
-        y: d[1]
-      };
-    }
-  };
-
-  document.addEventListener(
-    "keydown",
-    keyHandler
-  );
-
-  const timer = setInterval(tick, 110);
-
-  draw();
-
-  currentCleanup = () => {
-    clearInterval(timer);
-    document.removeEventListener(
-      "keydown",
-      keyHandler
-    );
-  };
-}
-
-
-// ====================
-// 🃏 MEMÓRIA
-// ====================
-
-function memory() {
-  const area = $("#gameArea");
-
-  const icons = [
-    "🍎",
-    "🚀",
-    "🐱",
-    "⚽",
-    "🌟",
-    "🍕",
-    "🎲",
-    "🦄"
-  ];
-
-  const cards = [
-    ...icons,
-    ...icons
-  ].sort(() => Math.random() - 0.5);
-
-  let first = null;
-  let busy = false;
-  let matched = 0;
-  let moves = 0;
-
-  area.innerHTML = `
-    <div class="game-box">
-      <p>Encontre todos os pares.</p>
-
-      <div class="memory-grid">
-        ${cards.map((value, index) => `
-          <button
-            class="memory-card"
-            data-i="${index}">
-            ${value}
-          </button>
-        `).join("")}
-      </div>
-
-      <p id="memInfo">
-        Jogadas: 0
-      </p>
-    </div>
-  `;
-
-  const elements =
-    $$(".memory-card");
-
-  elements.forEach(card => {
-    card.onclick = () => {
-
-      if (
-        busy ||
-        card.classList.contains("matched") ||
-        card === first
-      ) return;
-
-      card.classList.add("open");
-
-      if (!first) {
-        first = card;
-        return;
-      }
-
-      moves++;
-
-      $("#memInfo").textContent =
-        "Jogadas: " + moves;
-
-      const second = card;
-
-      if (
-        first.textContent ===
-        second.textContent
-      ) {
-        first.classList.add("matched");
-        second.classList.add("matched");
-
-        matched++;
-
-        setScore(matched * 10);
-
-        beep(700);
-
-        first = null;
-
-        if (matched === icons.length) {
-          $("#memInfo").textContent =
-            "Você venceu! 🎉";
-        }
-
-      } else {
-        busy = true;
-
-        setTimeout(() => {
-          first.classList.remove("open");
-          second.classList.remove("open");
-
-          first = null;
-          busy = false;
-        }, 650);
-      }
-    };
   });
-
-  currentCleanup = () => {};
 }
-
-
-// ====================
-// ❌⭕ JOGO DA VELHA
-// ====================
-
-function tictactoe() {
-  const area = $("#gameArea");
-
-  let board = Array(9).fill("");
-  let gameOver = false;
-
-  area.innerHTML = `
-    <div class="game-box">
-
-      <p>
-        Você é ❌.
-        O computador é ⭕.
-      </p>
-
-      <div class="ttt">
-        ${board.map((_, i) => `
-          <button data-i="${i}">
-          </button>
-        `).join("")}
-      </div>
-
-      <p id="tttInfo">
-        Sua vez!
-      </p>
-
-    </div>
-  `;
-
-  const cells = $$(".ttt button");
-
-  const wins = [
-    [0,1,2],
-    [3,4,5],
-    [6,7,8],
-    [0,3,6],
-    [1,4,7],
-    [2,5,8],
-    [0,4,8],
-    [2,4,6]
-  ];
-
-  function winner() {
-
-    for (const [a,b,c] of wins) {
-
-      if (
-        board[a] &&
-        board[a] === board[b] &&
-        board[a] === board[c]
-      ) {
-        return board[a];
-      }
-    }
-
-    return board.every(Boolean)
-      ? "draw"
-      : null;
-  }
-
-  function endGame() {
-
-    const result = winner();
-
-    if (!result) return false;
-
-    gameOver = true;
-
-    if (result === "draw") {
-      $("#tttInfo").textContent =
-        "Empate!";
-    }
-
-    else if (result === "❌") {
-      $("#tttInfo").textContent =
-        "Você venceu! 🎉";
-
-      setScore(100);
-    }
-
-    else {
-      $("#tttInfo").textContent =
-        "O computador venceu.";
-    }
-
-    return true;
-  }
-
-  cells.forEach(cell => {
-
-    cell.onclick = () => {
-
-      const index =
-        Number(cell.dataset.i);
-
-      if (
-        gameOver ||
-        board[index]
-      ) return;
-
-      board[index] = "❌";
-      cell.textContent = "❌";
-
-      if (endGame()) return;
-
-      const empty = board
-        .map((value, index) =>
-          value ? null : index
-        )
-        .filter(index =>
-          index !== null
-        );
-
-      const computer =
-        empty[
-          Math.floor(
-            Math.random() * empty.length
-          )
-        ];
-
-      board[computer] = "⭕";
-      cells[computer].textContent = "⭕";
-
-      endGame();
-    };
-  });
-
-  currentCleanup = () => {};
-}
-
-
-// ====================
-// 🧠 QUIZ
-// ====================
-
-function quiz() {
-
-  const questions = [
-
-    [
-      "Qual é o maior planeta do Sistema Solar?",
-      [
-        "Terra",
-        "Júpiter",
-        "Marte",
-        "Vênus"
-      ],
-      1
-    ],
-
-    [
-      "Quanto é 8 × 7?",
-      [
-        "54",
-        "56",
-        "64",
-        "48"
-      ],
-      1
-    ],
-
-    [
-      "Qual animal é conhecido como rei da selva?",
-      [
-        "Leão",
-        "Tigre",
-        "Elefante",
-        "Lobo"
-      ],
-      0
-    ],
-
-    [
-      "Quantos lados tem um hexágono?",
-      [
-        "5",
-        "6",
-        "7",
-        "8"
-      ],
-      1
-    ],
-
-    [
-      "Qual é a capital do Brasil?",
-      [
-        "São Paulo",
-        "Rio de Janeiro",
-        "Brasília",
-        "Salvador"
-      ],
-      2
-    ]
-
-  ];
-
-  let current = 0;
-  let score = 0;
-
-  const area = $("#gameArea");
-
-  function render() {
-
-    const question =
-      questions[current];
-
-    area.innerHTML = `
-      <div class="game-box">
-
-        <p>
-          ${current + 1}/${questions.length}
-        </p>
-
-        <div class="quiz-q">
-          ${question[0]}
-        </div>
-
-        <div class="quiz-options">
-
-          ${question[1].map(
-            (option, index) => `
-              <button data-j="${index}">
-                ${option}
-              </button>
-            `
-          ).join("")}
-
-        </div>
-
-      </div>
-    `;
-
-    area
-      .querySelectorAll(".quiz-options button")
-      .forEach(button => {
-
-        button.onclick = () => {
-
-          const answer =
-            Number(button.dataset.j);
-
-          if (answer === question[2]) {
-
-            score += 20;
-
-            setScore(score);
-
-            beep(700);
-
-          } else {
-
-            beep(200);
-
-          }
-
-          current++;
-
-          if (
-            current <
-            questions.length
-          ) {
-            render();
-          } else {
-
-            area.innerHTML = `
-              <div class="game-box">
-
-                <h2>
-                  Fim do quiz! 🏆
-                </h2>
-
-                <p>
-                  Você fez
-                  <b>${score}</b>
-                  pontos.
-                </p>
-
-                <button
-                  class="primary"
-                  onclick="quiz()">
-                  Jogar novamente
-                </button>
-
-              </div>
-            `;
-          }
-        };
-      });
-  }
-
-  render();
-
-  currentCleanup = () => {};
-}
+</script>
+</body>
+</html>
